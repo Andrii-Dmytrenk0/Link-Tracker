@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Dashboard')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div class="container-fluid px-4">
+
+    <h2 class="mb-4">Dashboard</h2>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-dark h-100">
+                <div class="card-body">
+                    <div class="text-uppercase small opacity-75">Total clicks</div>
+                    <div class="fs-2 fw-bold" th:text="${stats.totalClicks}">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-uppercase small text-muted">Unique IPs</div>
+                    <div class="fs-2 fw-bold" th:text="${stats.uniqueIps}">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-uppercase small text-muted">Clicks today</div>
+                    <div class="fs-2 fw-bold" th:text="${stats.clicksToday}">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-uppercase small text-muted">Avg/day &amp; growth</div>
+                    <div class="fs-5 fw-bold">
+                        <span th:text="${stats.averageClicksPerDay}">0</span> /day
+                        <span th:class="${stats.growthRatePercentage >= 0} ? 'text-success' : 'text-danger'"
+                              th:text="(${stats.growthRatePercentage} >= 0 ? '+' : '') + ${stats.growthRatePercentage} + '%'">
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header">Clicks per day (last 30 days)</div>
+                <div class="card-body"><canvas id="dailyChart" height="100"></canvas></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header">Clicks by hour (last 14 days)</div>
+                <div class="card-body"><canvas id="hourlyChart" height="180"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">Top 10 influencers</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between"
+                        th:each="t : ${stats.topInfluencers}">
+                        <span th:text="${t.label}">name</span>
+                        <span class="badge bg-dark rounded-pill" th:text="${t.count}">0</span>
+                    </li>
+                    <li class="list-group-item text-muted" th:if="${stats.topInfluencers.isEmpty()}">No data yet</li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">Click map</div>
+                <div class="card-body p-0">
+                    <div id="map" style="height: 280px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-5">
+        <div class="col-lg-3 col-md-6">
+            <div class="card">
+                <div class="card-header">Top countries</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between" th:each="t : ${stats.topCountries}">
+                        <span th:text="${t.label}">-</span><span th:text="${t.count}">0</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card">
+                <div class="card-header">Top cities</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between" th:each="t : ${stats.topCities}">
+                        <span th:text="${t.label}">-</span><span th:text="${t.count}">0</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card">
+                <div class="card-header">Top browsers</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between" th:each="t : ${stats.topBrowsers}">
+                        <span th:text="${t.label}">-</span><span th:text="${t.count}">0</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card">
+                <div class="card-header">Top OS / devices</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between" th:each="t : ${stats.topOperatingSystems}">
+                        <span th:text="${t.label}">-</span><span th:text="${t.count}">0</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const dailyLabels = /*[[${stats.clicksByDay.keySet()}]]*/ [];
+    const dailyValues = /*[[${stats.clicksByDay.values()}]]*/ [];
+    const hourlyLabels = /*[[${stats.clicksByHour.keySet()}]]*/ [];
+    const hourlyValues = /*[[${stats.clicksByHour.values()}]]*/ [];
+    const mapPoints = /*[[${stats.mapPoints}]]*/ [];
+    /*]]>*/
+
+    new Chart(document.getElementById('dailyChart'), {
+        type: 'line',
+        data: {
+            labels: dailyLabels,
+            datasets: [{label: 'Clicks', data: dailyValues, borderColor: '#212529', backgroundColor: 'rgba(33,37,41,0.1)', fill: true, tension: 0.3}]
+        },
+        options: {plugins: {legend: {display: false}}}
+    });
+
+    new Chart(document.getElementById('hourlyChart'), {
+        type: 'bar',
+        data: {
+            labels: hourlyLabels,
+            datasets: [{label: 'Clicks', data: hourlyValues, backgroundColor: '#6c757d'}]
+        },
+        options: {plugins: {legend: {display: false}}}
+    });
+
+    const map = L.map('map').setView([20, 0], 1.5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '&copy; OpenStreetMap'}).addTo(map);
+    mapPoints.forEach(p => {
+        if (p.latitude && p.longitude) {
+            L.circleMarker([p.latitude, p.longitude], {radius: Math.min(20, 4 + Math.sqrt(p.count)), color: '#212529'})
+                .bindPopup(p.country + ': ' + p.count + ' clicks')
+                .addTo(map);
+        }
+    });
+</script>
+</body>
+</html>

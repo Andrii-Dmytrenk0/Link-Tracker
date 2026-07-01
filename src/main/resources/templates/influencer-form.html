@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${isNew} ? 'New influencer' : 'Edit influencer')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div class="container px-4" style="max-width: 640px;">
+    <h2 class="mb-4" th:text="${isNew} ? 'New influencer' : 'Edit influencer'">Influencer</h2>
+
+    <div id="formAlert" class="alert alert-danger d-none"></div>
+
+    <form id="influencerForm" class="card card-body">
+        <input type="hidden" id="influencerId" th:value="${influencer.id}"/>
+
+        <div class="mb-3">
+            <label class="form-label">Ім'я</label>
+            <input type="text" id="name" class="form-control" th:value="${influencer.name}" required/>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Код (залиште порожнім для автогенерації)</label>
+            <div class="input-group">
+                <input type="text" id="code" class="form-control" th:value="${influencer.code}"
+                       th:placeholder="${isNew} ? 'auto-generated, e.g. a8K2xP' : ''"/>
+                <button class="btn btn-outline-secondary" type="button" id="regenBtn"
+                        th:if="${!isNew}">
+                    <i class="bi bi-arrow-clockwise"></i> Згенерувати новий код
+                </button>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Instagram URL</label>
+            <input type="url" id="instagramUrl" class="form-control" th:value="${influencer.instagramUrl}"
+                   placeholder="https://instagram.com/shop" required/>
+        </div>
+
+        <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="active"
+                   th:checked="${isNew} ? true : influencer.active"/>
+            <label class="form-check-label" for="active">Active</label>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-dark">Save</button>
+            <a href="/admin/influencers" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script th:inline="javascript">
+    const isNew = /*[[${isNew}]]*/ true;
+    function getCookie(name) {
+        const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return v ? v.pop() : '';
+    }
+
+    document.getElementById('influencerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('influencerId').value;
+        const payload = {
+            name: document.getElementById('name').value,
+            code: document.getElementById('code').value,
+            instagramUrl: document.getElementById('instagramUrl').value,
+            active: document.getElementById('active').checked
+        };
+        const url = isNew ? '/api/influencers' : '/api/influencers/' + id;
+        const method = isNew ? 'POST' : 'PUT';
+
+        const res = await fetch(url, {
+            method,
+            headers: {'Content-Type': 'application/json', 'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')},
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            window.location.href = '/admin/influencers';
+        } else {
+            const err = await res.json().catch(() => ({message: 'Save failed'}));
+            const alertBox = document.getElementById('formAlert');
+            alertBox.textContent = err.message || 'Save failed';
+            alertBox.classList.remove('d-none');
+        }
+    });
+
+    const regenBtn = document.getElementById('regenBtn');
+    if (regenBtn) {
+        regenBtn.addEventListener('click', async () => {
+            const id = document.getElementById('influencerId').value;
+            const res = await fetch('/api/influencers/' + id + '/regenerate-code', {
+                method: 'POST',
+                headers: {'X-XSRF-TOKEN': getCookie('XSRF-TOKEN')}
+            });
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('code').value = data.code;
+            }
+        });
+    }
+</script>
+</body>
+</html>

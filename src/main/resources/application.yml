@@ -1,0 +1,71 @@
+spring:
+  application:
+    name: link-tracker
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:linktracker}
+    username: ${DB_USER:linktracker}
+    password: ${DB_PASSWORD:linktracker}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+      minimum-idle: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          batch_size: 50
+    show-sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  thymeleaf:
+    cache: ${THYMELEAF_CACHE:true}
+
+server:
+  port: ${SERVER_PORT:8080}
+  forward-headers-strategy: native
+  compression:
+    enabled: true
+
+# Default admin account, created on first boot if it doesn't already exist.
+# CHANGE THE PASSWORD after first login, or override these via environment
+# variables before the first run.
+admin:
+  default-username: ${ADMIN_USERNAME:admin}
+  default-password: ${ADMIN_PASSWORD:changeme123}
+
+geo:
+  ip-api:
+    base-url: ${GEO_IP_API_BASE_URL:http://ip-api.com}
+
+tracking:
+  rate-limit:
+    window-seconds: ${RATE_LIMIT_WINDOW_SECONDS:60}
+    suspicious-threshold: ${RATE_LIMIT_THRESHOLD:5}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  level:
+    root: INFO
+    com.linktracker: ${LOG_LEVEL:INFO}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${stats.influencer.name} + ' · Statistics')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+<div class="container-fluid px-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="m-0" th:text="${stats.influencer.name}">Anna</h2>
+            <a th:href="${stats.influencer.trackingUrl}" target="_blank" class="text-muted small"
+               th:text="${stats.influencer.trackingUrl}"></a>
+        </div>
+        <div>
+            <a class="btn btn-outline-secondary"
+               th:href="@{/api/export/csv(influencerId=${stats.influencer.id})}">
+                <i class="bi bi-filetype-csv"></i> CSV
+            </a>
+            <a class="btn btn-outline-secondary"
+               th:href="@{/api/export/excel(influencerId=${stats.influencer.id})}">
+                <i class="bi bi-filetype-xlsx"></i> Excel
+            </a>
+            <a class="btn btn-outline-secondary"
+               th:href="@{/api/export/pdf(influencerId=${stats.influencer.id})}">
+                <i class="bi bi-filetype-pdf"></i> PDF
+            </a>
+            <a href="/admin/influencers" class="btn btn-dark">Back</a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-2 col-6">
+            <div class="card text-center"><div class="card-body">
+                <div class="text-muted small">Total</div>
+                <div class="fs-4 fw-bold" th:text="${stats.totalClicks}">0</div>
+            </div></div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card text-center"><div class="card-body">
+                <div class="text-muted small">Unique (%)</div>
+                <div class="fs-4 fw-bold" th:text="${stats.uniqueClicks} + ' (' + ${stats.uniquePercentage} + '%)'">0</div>
+            </div></div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card text-center"><div class="card-body">
+                <div class="text-muted small">Today</div>
+                <div class="fs-4 fw-bold" th:text="${stats.clicksToday}">0</div>
+            </div></div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card text-center"><div class="card-body">
+                <div class="text-muted small">This week</div>
+                <div class="fs-4 fw-bold" th:text="${stats.clicksThisWeek}">0</div>
+            </div></div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card text-center"><div class="card-body">
+                <div class="text-muted small">This month</div>
+                <div class="fs-4 fw-bold" th:text="${stats.clicksThisMonth}">0</div>
+            </div></div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card text-center"><div class="card-body">
+                <div class="text-muted small">Bot clicks</div>
+                <div class="fs-4 fw-bold" th:text="${stats.botClicks}">0</div>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Last 100 clicks</div>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Timestamp</th><th>IP</th><th>Country</th><th>City</th>
+                    <th>Device</th><th>Browser</th><th>OS</th><th>Flags</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="c : ${stats.recentClicks}">
+                    <td th:text="${c.timestamp}"></td>
+                    <td th:text="${c.ip}"></td>
+                    <td th:text="${c.country}"></td>
+                    <td th:text="${c.city}"></td>
+                    <td th:text="${c.deviceType}"></td>
+                    <td th:text="${c.browser}"></td>
+                    <td th:text="${c.os}"></td>
+                    <td>
+                        <span th:if="${c.bot}" class="badge bg-danger">bot</span>
+                        <span th:if="${c.suspicious}" class="badge bg-warning text-dark">suspicious</span>
+                        <span th:unless="${c.uniqueVisit}" class="badge bg-secondary">repeat</span>
+                    </td>
+                </tr>
+                <tr th:if="${stats.recentClicks.isEmpty()}">
+                    <td colspan="8" class="text-center text-muted py-4">No clicks recorded yet</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
