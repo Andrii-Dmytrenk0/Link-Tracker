@@ -39,7 +39,7 @@ public interface ClickEventRepository extends JpaRepository<ClickEvent, Long>, J
     @Query(value = """
             SELECT CAST(timestamp AS date) AS day, COUNT(*) AS total
             FROM click_events
-            WHERE timestamp >= :since AND bot = false
+            WHERE timestamp >= :since AND is_bot = false
             GROUP BY day
             ORDER BY day
             """, nativeQuery = true)
@@ -48,7 +48,7 @@ public interface ClickEventRepository extends JpaRepository<ClickEvent, Long>, J
     @Query(value = """
             SELECT EXTRACT(HOUR FROM timestamp) AS hr, COUNT(*) AS total
             FROM click_events
-            WHERE timestamp >= :since AND bot = false
+            WHERE timestamp >= :since AND is_bot = false
             GROUP BY hr
             ORDER BY hr
             """, nativeQuery = true)
@@ -57,7 +57,7 @@ public interface ClickEventRepository extends JpaRepository<ClickEvent, Long>, J
     @Query(value = """
             SELECT COALESCE(country, 'Unknown') AS country, COUNT(*) AS total
             FROM click_events
-            WHERE bot = false
+            WHERE is_bot = false
             GROUP BY country
             ORDER BY total DESC
             LIMIT :limit
@@ -67,7 +67,7 @@ public interface ClickEventRepository extends JpaRepository<ClickEvent, Long>, J
     @Query(value = """
             SELECT COALESCE(city, 'Unknown') AS city, COUNT(*) AS total
             FROM click_events
-            WHERE bot = false
+            WHERE is_bot = false
             GROUP BY city
             ORDER BY total DESC
             LIMIT :limit
@@ -77,7 +77,7 @@ public interface ClickEventRepository extends JpaRepository<ClickEvent, Long>, J
     @Query(value = """
             SELECT COALESCE(browser, 'Unknown') AS browser, COUNT(*) AS total
             FROM click_events
-            WHERE bot = false
+            WHERE is_bot = false
             GROUP BY browser
             ORDER BY total DESC
             LIMIT :limit
@@ -87,7 +87,7 @@ public interface ClickEventRepository extends JpaRepository<ClickEvent, Long>, J
     @Query(value = """
             SELECT COALESCE(os, 'Unknown') AS os, COUNT(*) AS total
             FROM click_events
-            WHERE bot = false
+            WHERE is_bot = false
             GROUP BY os
             ORDER BY total DESC
             LIMIT :limit
@@ -97,7 +97,7 @@ public interface ClickEventRepository extends JpaRepository<ClickEvent, Long>, J
     @Query(value = """
             SELECT COALESCE(device_type, 'UNKNOWN') AS device_type, COUNT(*) AS total
             FROM click_events
-            WHERE bot = false
+            WHERE is_bot = false
             GROUP BY device_type
             ORDER BY total DESC
             """, nativeQuery = true)
@@ -106,7 +106,7 @@ public interface ClickEventRepository extends JpaRepository<ClickEvent, Long>, J
     @Query(value = """
             SELECT country, latitude, longitude, COUNT(*) AS total
             FROM click_events
-            WHERE bot = false AND latitude IS NOT NULL AND longitude IS NOT NULL
+            WHERE is_bot = false AND latitude IS NOT NULL AND longitude IS NOT NULL
             GROUP BY country, latitude, longitude
             """, nativeQuery = true)
     List<Object[]> worldMapPoints();
